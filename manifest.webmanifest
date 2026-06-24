@@ -1,0 +1,16 @@
+{
+  "name": "Grill ETA",
+  "short_name": "Grill ETA",
+  "description": "Physics-based BBQ probe cook-time estimator",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14110F",
+  "theme_color": "#14110F",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

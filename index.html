@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#14110F" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Grill ETA</title>
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Grill ETA" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  :root{--bg:#14110F;--panel:#1F1A17;--panel2:#1A1512;--line:#2E2723;--hi:#F2E9DF;--dim:#9A8C7E;
+        --ember:#FF7A4D;--amber:#E0902E;--steel:#6FA8DC;--mono:'JetBrains Mono',monospace;--disp:'Space Grotesk',sans-serif;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--hi);font-family:var(--disp);
+       padding:16px 14px calc(20px + env(safe-area-inset-bottom));max-width:560px;margin:0 auto}
+  h1{font-size:28px;font-weight:700;letter-spacing:-.02em;margin:2px 0 0}
+  .kicker{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber)}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+  .right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .clock{text-align:right;font-family:var(--mono)} .clock small{display:block;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim)} .clock b{font-size:20px;font-weight:700}
+  button{font-family:var(--disp);cursor:pointer;transition:.12s;border:none;color:inherit}
+  .seg{display:flex;gap:6px} .seg button{padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:13px} .seg button.on{border-color:var(--amber);background:#2a2010;color:var(--amber);font-weight:600}
+  .lang button{padding:5px 9px;font-size:12px}
+  .segrow{display:flex;gap:6px;align-items:center}
+  .iconbtn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:15px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .modal.open{display:flex}
+  .sheet{background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:20px 18px 30px;position:relative}
+  .sheet .x{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:14px;cursor:pointer}
+  .help h3{font-size:19px;margin:0 36px 8px 0} .help h4{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);margin:16px 0 5px}
+  .help p{font-size:13.5px;line-height:1.5;color:var(--hi);margin:0 0 6px} .help b{color:var(--hi)}
+  .help .sw{display:inline-block;width:22px;height:4px;border-radius:2px;vertical-align:middle;margin-right:7px}
+  .ioRow{display:flex;gap:8px;margin-top:8px}
+  .io{flex:1;padding:9px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--dim);font-family:var(--mono);font-size:12px;cursor:pointer}
+  .connect{width:100%;padding:14px;border-radius:12px;background:var(--ember);color:#14110F;font-size:16px;font-weight:700;margin-bottom:10px}
+  .connect.on{background:transparent;border:1px solid var(--line);color:var(--dim);font-weight:500}
+  .status{font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center;margin:-4px 0 12px}
+  .status.live{color:#7Fd17F}
+  .err{background:#3a1410;border:1px solid #5a2422;color:#ff9b80;font-family:var(--mono);font-size:12px;padding:10px 12px;border-radius:10px;margin-bottom:12px;display:none}
+
+  .readouts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .card .lab{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:5px;display:flex;gap:7px;align-items:center}
+  .card .val{font-family:var(--mono);font-size:30px;font-weight:700;line-height:1}
+  .card .val .u{font-size:.45em;color:var(--dim);margin-left:2px}
+  .eta{grid-column:1/-1;background:linear-gradient(180deg,#241a15,#1F1A17)} .eta .val{font-size:38px;color:var(--ember)}
+  .eta.ready{background:linear-gradient(180deg,#16301a,#1F1A17)} .eta.ready .val{color:#7Fd17F;font-size:30px}
+  .heroRow{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+  .hero{display:flex;flex-direction:column;min-width:0} .hero.r{align-items:flex-end;text-align:right}
+  .hlab{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:3px;min-height:11px}
+  .eta .val2{font-size:26px;color:#C97A4D}
+  .sub{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:7px}
+  .chip{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:6px;background:#3a2410;color:var(--amber);letter-spacing:.06em}
+
+  .alarms{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .alarmbtn{padding:11px 8px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--dim);font-size:12.5px;font-weight:600;font-family:var(--mono);line-height:1.25}
+  .alarmbtn.firing{background:#3a1410;border-color:#ff5a36;color:#ffb39e;animation:pulse 1s infinite}
+  .alarmbtn.silenced{color:#7Fd17F;border-color:#2c4a30}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+
+  canvas{width:100%;height:230px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;margin:4px 0 6px;display:block}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;font-family:var(--mono);font-size:10px;color:var(--dim);margin-bottom:10px}
+  .legend i{display:inline-block;width:16px;height:4px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  .lg-food{background:linear-gradient(90deg,#4C5BD4,#E0902E,#FF5A36)} .lg-grill{background:var(--steel)} .lg-proj{background:var(--ember)}
+  .lg-mt{background:repeating-linear-gradient(90deg,#E0902E 0 5px,transparent 5px 8px)} .lg-gt{background:repeating-linear-gradient(90deg,#6FA8DC 0 5px,transparent 5px 8px)}
+  .lg-we{background:repeating-linear-gradient(90deg,rgba(255,122,77,.6) 0 3px,transparent 3px 7px)}
+
+  .ctrls{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .scroller{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;-ms-overflow-style:none;scrollbar-width:none}
+  .scroller::-webkit-scrollbar{display:none}
+  .scroller button{flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:13px;white-space:nowrap}
+  .scroller button.on{border-color:var(--amber);background:#2a2010;color:var(--amber);font-weight:600}
+  .field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+  .field:last-child{margin-bottom:0}
+  .field .l{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .stepper button{width:40px;height:40px;background:#241c17;font-size:22px;font-weight:600;color:var(--hi)}
+  .stepper button:active{background:#33271e}
+  .stepper .num{min-width:76px;text-align:center;font-family:var(--mono);font-size:16px;font-weight:700;padding:0 6px}
+  .timein{background:#14110F;border:1px solid var(--line);border-radius:10px;color:var(--hi);font-family:var(--mono);font-size:15px;padding:9px 12px}
+  .donrow{display:none;margin-bottom:12px}
+
+  .recs{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .rectitle{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:10px}
+  .recline{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;padding:5px 0;border-bottom:1px solid #241f1b}
+  .recline span{color:var(--dim)} .recline b{font-family:var(--mono)} .recline.plan b{color:#7Fd17F}
+  .rectip{font-size:12.5px;color:var(--dim);line-height:1.5;margin-top:10px}
+  .foot{font-size:11px;color:#6E6258;text-align:center;line-height:1.5;margin-top:4px}
+</style>
+</head>
+<body>
+  <div class="top">
+    <div><div class="kicker" id="kicker"></div><h1>Grill ETA</h1></div>
+    <div class="right">
+      <div class="segrow"><button id="helpBtn" class="iconbtn" aria-label="Help" title="Help">?</button><div class="seg lang"><button data-lang="en">EN</button><button data-lang="da">DA</button></div></div>
+      <div class="clock"><small id="cookLab"></small><b id="cookClock">0:00</b></div>
+    </div>
+  </div>
+
+  <div class="err" id="err"></div>
+  <button class="connect" id="connectBtn"></button>
+  <div class="status" id="status"></div>
+
+  <div class="readouts">
+    <div class="card"><div class="lab" id="foodLab"></div><div class="val" id="vFood">—<span class="u" id="uFood"></span></div></div>
+    <div class="card"><div class="lab" id="grillLab"></div><div class="val" id="vGrill">—<span class="u" id="uGrill"></span></div></div>
+    <div class="card eta" id="etaCard"><div class="lab"><span id="etaLab"></span> <span id="stallChip"></span></div><div class="heroRow"><div class="hero"><div class="hlab" id="hlPull"></div><div class="val" id="vEta">—</div></div><div class="hero r"><div class="hlab" id="hlServe"></div><div class="val val2" id="vServe"></div></div></div><div class="sub" id="etaSub"></div></div>
+  </div>
+
+  <div class="alarms">
+    <button class="alarmbtn" id="silMeat"></button>
+    <button class="alarmbtn" id="silGrill"></button>
+  </div>
+
+  <canvas id="chart"></canvas>
+  <div class="legend">
+    <span><i class="lg-food"></i><span id="legFood"></span></span>
+    <span><i class="lg-mt"></i><span id="legMT"></span></span>
+    <span><i class="lg-grill"></i><span id="legGrill"></span></span>
+    <span><i class="lg-gt"></i><span id="legGT"></span></span>
+    <span><i class="lg-proj"></i><span id="legProj"></span></span>
+    <span><i class="lg-we"></i><span id="legWeight"></span></span>
+  </div>
+
+  <div class="ctrls">
+    <div class="scroller" id="meats"></div>
+    <div class="scroller donrow" id="doneness"></div>
+    <div class="field"><span class="l" id="lblTarget"></span>
+      <div class="stepper"><button id="tDown">−</button><span class="num" id="tNum">—</span><button id="tUp">+</button></div></div>
+    <div class="field"><span class="l" id="lblPit"></span>
+      <div class="stepper"><button id="pDown">−</button><span class="num" id="pNum">—</span><button id="pUp">+</button></div></div>
+    <div class="field"><span class="l" id="lblWeight"></span>
+      <div class="stepper"><button id="wDown">−</button><span class="num" id="wNum">—</span><button id="wUp">+</button></div></div>
+    <div class="field"><span class="l" id="lblFrom"></span>
+      <div class="seg"><button data-from="fridge"></button><button data-from="room"></button></div></div>
+    <div class="field"><span class="l" id="lblServe"></span>
+      <input type="time" id="serveAt" class="timein" /></div>
+    <div class="field"><span class="l" id="lblGrillAlarm"></span>
+      <div class="seg"><button data-g="off"></button><button data-g="on"></button></div></div>
+    <div class="field"><span class="l" id="lblAlarmRange"></span>
+      <div class="stepper"><button id="bDown">−</button><span class="num" id="bNum">—</span><button id="bUp">+</button></div></div>
+    <div class="field"><span class="l" id="lblUnit"></span>
+      <div class="seg"><button data-u="C">°C</button><button data-u="F">°F</button></div></div>
+    <button class="connect on" id="resetBtn" style="margin:0"></button>
+    <div class="ioRow"><button class="io" id="exportBtn"></button><button class="io" id="importBtn"></button></div>
+    <input type="file" id="importFile" accept="application/json,.json" style="display:none" />
+  </div>
+
+  <div class="recs" id="recs"></div>
+  <div class="foot" id="foot"></div>
+  <div class="modal" id="helpModal"><div class="sheet"><button class="x" id="helpClose" aria-label="Close">✕</button><div id="helpBody" class="help"></div></div></div>
+
+<script>
+/* ===== translations ===== */
+const L={
+ en:{kicker:'physics-based · live probe',cookTime:'cook time',connect:'Connect probe',disconnect:'Disconnect',
+  stNot:'Not connected',stReq:'Requesting device…',stConn:'Connecting…',stLive:'Live — receiving data',stDisc:'Disconnected — tap to reconnect',
+  noBT:'No Web Bluetooth here. Open in Chrome on Android.',food:'meat',grill:'grill / pit',readyIn:'ready in',pullIn:'pull in',serveIn:'serve in',pullNow:'now',restWord:'rest',
+  gathering:'gathering data…',waiting:'waiting for a clear trend…',tooCool:'pit too cool',wontPass:t=>`won't reach ≈ ${t} — raise the heat`,
+  ready:'Ready — pull it',rest:n=>`rest ${n} min before serving`,pit:'pit',fromWeight:'estimate from weight — refines live',
+  meatArmed:'Meat alarm armed',meatReady:'Meat ready — tap to silence',meatSil:'Meat silenced',
+  grillOff:'Grill alarm off',grillCold:'Grill too cold — silence',grillHot:'Grill too hot — silence',grillSil:'Grill silenced',grillOk:'Grill in range',
+  recTitle:m=>`${m} · recommendations`,pullAt:'Pull off at',restBefore:'Rest before serving',min:n=>`${n} min`,grillSet:'Grill / oven set to',now:'now',
+  startBy:'Start cooking by',readyServe:'Ready to serve ≈',totalCook:'Estimated total time',
+  lblTarget:'target meat temp',lblPit:'grill / oven temp',lblWeight:'meat weight',lblFrom:'starting temp',fridge:'Fridge',room:'Room',
+  lblServe:'serve at',lblGrillAlarm:'grill alarm',lblAlarmRange:'alarm range ±',lblUnit:'unit',off:'Off',on:'On',reset:'Reset cook',weightOff:'not set',exportL:'Export cook',importL:'Import cook',badFile:'Could not read that cook file',
+  legFood:'meat',legGrill:'grill',legProj:'live est.',legWeight:'weight est.',legMT:'meat target',legGT:'grill target',
+  help:`<h3>How Grill ETA works</h3>
+<p>A physics-based cook-time estimator for a wireless BBQ probe. It reads your probe's meat and grill temperatures over Bluetooth and predicts when the meat will hit your target.</p>
+<h4>The two numbers</h4>
+<p><b>PULL IN</b> — time until the meat reaches your target. This is when the meat alarm fires and you take it off the heat.</p>
+<p><b>SERVE IN</b> — pull time plus the rest period: when it's actually ready to eat.</p>
+<h4>Before you connect</h4>
+<p>Pick the meat, doneness, weight and starting temp to get a planning estimate. Add a <b>serve at</b> time and you'll get a <b>start cooking by</b> time.</p>
+<h4>Connect the probe</h4>
+<p>Tap <b>Connect probe</b> and choose your probe (Chrome on Android). Insert the tip into the thickest part of the meat; the base sensor reads the grill/pit air.</p>
+<h4>The graph</h4>
+<p><span class="sw" style="background:#FF7A4D"></span><b>Meat</b> — actual probe temperature (solid).</p>
+<p><span class="sw" style="background:#FF7A4D;opacity:.55"></span><b>Live est.</b> — projection from real data (bright dashed).</p>
+<p><span class="sw" style="background:repeating-linear-gradient(90deg,#FF7A4D 0 3px,transparent 3px 7px)"></span><b>Weight est.</b> — the original weight-based prediction, kept for comparison (faint dotted).</p>
+<p><span class="sw" style="background:#6FA8DC"></span><b>Grill</b> — pit/oven temperature. Dashed lines are your targets.</p>
+<h4>Alarms</h4>
+<p>The meat alarm fires at target. The optional grill alarm warns if the pit drifts outside ± the range you set. Tap a firing alarm to silence it. Keep the app open and the screen on so alarms keep sounding.</p>
+<h4>Tuning the estimate</h4>
+<p>The faint dotted line is what the weight model predicted up front. Compare it to the actual line: if cooks consistently run slower or faster, the per-cut constants can be adjusted.</p>
+<h4>Saving &amp; export</h4>
+<p>Your current cook (settings + readings) is saved automatically on this device, so closing the page won't lose progress. <b>Reset cook</b> clears it. <b>Export cook</b> downloads a JSON log for debugging or tuning; <b>Import cook</b> reloads one.</p>
+<h4>Compatible probes</h4>
+<p>Works with wireless probes that use the “Grill ProbeE” app (FMG / Shenzhen Flamingo and its rebrands). On iPhone the planner works, but the live probe connection needs Chrome on Android.</p>`,
+  foot:'Insert the tip into the thickest part; the base sensor reads grill/pit air. Keep the app open so alarms keep sounding.'},
+ da:{kicker:'fysikbaseret · live probe',cookTime:'tilberedningstid',connect:'Forbind probe',disconnect:'Afbryd',
+  stNot:'Ikke forbundet',stReq:'Søger enhed…',stConn:'Forbinder…',stLive:'Live — modtager data',stDisc:'Afbrudt — tryk for at forbinde igen',
+  noBT:'Ingen Web Bluetooth her. Åbn i Chrome på Android.',food:'kød',grill:'grill',readyIn:'klar om',pullIn:'tag af om',serveIn:'servering om',pullNow:'nu',restWord:'hvile',
+  gathering:'indsamler data…',waiting:'venter på en tydelig tendens…',tooCool:'grill for kold',wontPass:t=>`når ikke ≈ ${t} — skru op`,
+  ready:'Klar — tag den af',rest:n=>`hvil ${n} min før servering`,pit:'grill',fromWeight:'estimat ud fra vægt — finpudses live',
+  meatArmed:'Kødalarm klar',meatReady:'Kød klar — tryk for at slå fra',meatSil:'Kød slået fra',
+  grillOff:'Grillalarm fra',grillCold:'Grill for kold — slå fra',grillHot:'Grill for varm — slå fra',grillSil:'Grill slået fra',grillOk:'Grill i niveau',
+  recTitle:m=>`${m} · anbefalinger`,pullAt:'Tag kødet af ved',restBefore:'Hvil før servering',min:n=>`${n} min`,grillSet:'Grill / ovn indstilles til',now:'nu',
+  startBy:'Start tilberedning senest',readyServe:'Klar til servering ≈',totalCook:'Anslået samlet tid',
+  lblTarget:'ønsket kødtemperatur',lblPit:'grill- / ovntemperatur',lblWeight:'kødvægt',lblFrom:'starttemperatur',fridge:'Køleskab',room:'Stuetemp.',
+  lblServe:'servér kl.',lblGrillAlarm:'grillalarm',lblAlarmRange:'alarminterval ±',lblUnit:'enhed',off:'Fra',on:'Til',reset:'Nulstil',weightOff:'ikke sat',exportL:'Eksportér',importL:'Importér',badFile:'Kunne ikke læse den fil',
+  legFood:'kød',legGrill:'grill',legProj:'live est.',legWeight:'vægt-est.',legMT:'kødmål',legGT:'grillmål',
+  help:`<h3>Sådan virker Grill ETA</h3>
+<p>En fysikbaseret estimering af tilberedningstid til en trådløs grillprobe. Den læser probeens kød- og grilltemperatur via Bluetooth og forudsiger, hvornår kødet rammer din måltemperatur.</p>
+<h4>De to tal</h4>
+<p><b>TAG AF OM</b> — tid til kødet når måltemperaturen. Det er her kødalarmen lyder, og du tager det af varmen.</p>
+<p><b>SERVERING OM</b> — tid til at tage af plus hviletid: hvornår det er klar til at spise.</p>
+<h4>Før du forbinder</h4>
+<p>Vælg kød, stegegrad, vægt og starttemperatur for at få et planlægnings-estimat. Tilføj et <b>servér kl.</b>-tidspunkt, og du får et <b>start senest</b>-tidspunkt.</p>
+<h4>Forbind proben</h4>
+<p>Tryk <b>Forbind probe</b> og vælg din probe (Chrome på Android). Stik spidsen i den tykkeste del af kødet; bundsensoren måler grill-/ovnluften.</p>
+<h4>Grafen</h4>
+<p><span class="sw" style="background:#FF7A4D"></span><b>Kød</b> — faktisk probetemperatur (fuld linje).</p>
+<p><span class="sw" style="background:#FF7A4D;opacity:.55"></span><b>Live-est.</b> — fremskrivning ud fra rigtige data (kraftig stiplet).</p>
+<p><span class="sw" style="background:repeating-linear-gradient(90deg,#FF7A4D 0 3px,transparent 3px 7px)"></span><b>Vægt-est.</b> — den oprindelige vægtbaserede forudsigelse, beholdt til sammenligning (svag prikket).</p>
+<p><span class="sw" style="background:#6FA8DC"></span><b>Grill</b> — grill-/ovntemperatur. Stiplede linjer er dine mål.</p>
+<h4>Alarmer</h4>
+<p>Kødalarmen lyder ved måltemperatur. Den valgfrie grillalarm advarer, hvis grillen driver uden for ± dit interval. Tryk på en aktiv alarm for at slå den fra. Hold appen åben med skærmen tændt, så alarmerne bliver ved med at lyde.</p>
+<h4>Finjustering af estimatet</h4>
+<p>Den svage prikkede linje er, hvad vægtmodellen forudsagde fra start. Sammenlign den med den faktiske linje: hvis tilberedninger konsekvent tager længere eller kortere tid, kan konstanterne pr. udskæring justeres.</p>
+<h4>Gem og eksport</h4>
+<p>Din nuværende tilberedning (indstillinger + målinger) gemmes automatisk på denne enhed, så du mister ikke fremskridt ved at lukke siden. <b>Nulstil</b> rydder den. <b>Eksportér</b> henter en JSON-log til fejlsøgning eller justering; <b>Importér</b> indlæser en igen.</p>
+<h4>Kompatible prober</h4>
+<p>Virker med trådløse prober der bruger “Grill ProbeE”-appen (FMG / Shenzhen Flamingo og deres rebrands). På iPhone virker planlæggeren, men live-forbindelsen kræver Chrome på Android.</p>`,
+  foot:'Sæt spidsen ind i den tykkeste del; bundsensoren måler grill-/ovnluften. Hold appen åben så alarmerne bliver ved med at lyde.'}
+};
+const DONL={en:{rare:'Rare',medrare:'Med-rare',medium:'Medium',medwell:'Med-well',well:'Well',sliceable:'Sliceable',probetender:'Probe-tender',fallapart:'Fall-apart',tender:'Tender',bitethrough:'Bite-through',falloff:'Fall-off',safe:'Safe',verytender:'Very tender',juicy:'Juicy'},
+ da:{rare:'Rød',medrare:'Rosa-rød',medium:'Medium',medwell:'Medium-gennem',well:'Gennemstegt',sliceable:'Skærbar',probetender:'Mør',fallapart:'Findeling',tender:'Mør',bitethrough:'Bid',falloff:'Falder af',safe:'Sikker',verytender:'Meget mør',juicy:'Saftig'}};
+
+/* ===== recipes (temps °F; base1kg = rough minutes for 1 kg, fridge start, default pit & doneness — cold-start prior only, refined by live data) ===== */
+const MEATS=[
+ {id:'steak',label:{en:'Beef steak',da:'Bøf'},don:[['rare',125],['medrare',132],['medium',140],['medwell',150],['well',160]],defDon:1,pit:450,rest:5,base1kg:16,tip:{en:'Sear hot. Whole-muscle beef is safe at any doneness.',da:'Brun ved høj varme. Hel oksemuskel er sikker ved enhver stegegrad.'}},
+ {id:'beefroast',label:{en:'Beef roast',da:'Oksesteg'},don:[['rare',125],['medrare',130],['medium',140],['medwell',150],['well',155]],defDon:1,pit:250,rest:20,base1kg:78,tip:{en:'Roast low and slow; rest well before carving.',da:'Steg langsomt ved lav varme; lad den hvile godt før udskæring.'}},
+ {id:'burger',label:{en:'Burger',da:'Burger'},don:[['medium',160],['well',165]],defDon:0,pit:450,rest:3,base1kg:12,tip:{en:'Ground beef must be cooked through — no rare burgers.',da:'Hakket oksekød skal gennemsteges — ingen røde burgere.'}},
+ {id:'brisket',label:{en:'Brisket',da:'Brisket'},don:[['sliceable',195],['probetender',203],['fallapart',207]],defDon:1,pit:250,rest:45,base1kg:165,tip:{en:'Cook to feel — the probe should slide in like butter. Wrap through the stall.',da:'Tilbered til den føles mør — proben skal glide i som i smør. Pak ind gennem stall.'}},
+ {id:'pulledpork',label:{en:'Pulled pork',da:'Pulled pork'},don:[['sliceable',195],['tender',203],['fallapart',207]],defDon:1,pit:225,rest:30,base1kg:190,tip:{en:'The shoulder shreds once the collagen has rendered. Rest, then pull.',da:'Bovet falder fra hinanden når kollagenet er smeltet. Lad hvile, og riv så.'}},
+ {id:'ribs',label:{en:'Ribs',da:'Ribben'},don:[['bitethrough',195],['tender',200],['falloff',203]],defDon:1,pit:250,rest:10,base1kg:180,tip:{en:'Done when a toothpick slides in with no resistance.',da:'Færdig når en tandstik glider i uden modstand.'}},
+ {id:'porkchop',label:{en:'Pork chop',da:'Svinekotelet'},don:[['medium',145],['medwell',150],['well',160]],defDon:0,pit:400,rest:3,base1kg:18,tip:{en:'Pork is safe slightly pink and stays juicy.',da:'Svinekød er sikkert let lyserødt og forbliver saftigt.'}},
+ {id:'porkloin',label:{en:'Pork loin',da:'Svinekam'},don:[['medium',145],['well',160]],defDon:0,pit:375,rest:5,base1kg:50,tip:{en:'Lean cut — pull on time so it does not dry out.',da:'Magert udskæring — tag den af i tide så den ikke tørrer ud.'}},
+ {id:'lambchop',label:{en:'Lamb chops',da:'Lammekoteletter'},don:[['rare',125],['medrare',132],['medium',140],['well',160]],defDon:1,pit:400,rest:5,base1kg:16,tip:{en:'Treat like beef — medium-rare to medium is classic.',da:'Behandl som oksekød — rosa er klassisk.'}},
+ {id:'lambleg',label:{en:'Lamb leg',da:'Lammekølle'},don:[['medrare',135],['medium',145],['well',160]],defDon:0,pit:325,rest:15,base1kg:80,tip:{en:'Roast slowly; rest well before carving.',da:'Steg langsomt; lad hvile godt før udskæring.'}},
+ {id:'chicken',label:{en:'Chicken (whole)',da:'Kylling (hel)'},don:[['safe',165],['tender',175],['verytender',185]],defDon:0,pit:375,rest:10,base1kg:60,tip:{en:'Poultry must be fully cooked. Dark meat is better cooked further.',da:'Fjerkræ skal gennemsteges. Mørkt kød har godt af lidt mere.'}},
+ {id:'chickenbreast',label:{en:'Chicken breast',da:'Kyllingebryst'},don:[['safe',165],['tender',170]],defDon:0,pit:400,rest:5,base1kg:24,tip:{en:'Pull right on temp to keep it juicy.',da:'Tag den af præcis ved temperaturen så den forbliver saftig.'}},
+ {id:'chickenthigh',label:{en:'Chicken thighs',da:'Kyllingelår'},don:[['safe',175],['tender',185],['falloff',195]],defDon:0,pit:400,rest:5,base1kg:30,tip:{en:'Thighs improve as the connective tissue breaks down.',da:'Lår bliver bedre når bindevævet nedbrydes.'}},
+ {id:'turkey',label:{en:'Turkey',da:'Kalkun'},don:[['safe',165],['tender',170]],defDon:0,pit:325,rest:20,base1kg:55,tip:{en:'Big bird, lots of carryover — rest it well.',da:'Stor fugl, meget eftervarme — lad den hvile godt.'}},
+ {id:'duck',label:{en:'Duck breast',da:'Andebryst'},don:[['medrare',135],['medium',145]],defDon:0,pit:400,rest:5,base1kg:25,tip:{en:'Duck breast is traditionally served pink; render the skin first.',da:'Andebryst serveres traditionelt rosa; smelt skindet af først.'}},
+ {id:'salmon',label:{en:'Salmon',da:'Laks'},don:[['medrare',120],['medium',130],['well',145]],defDon:1,pit:400,rest:2,base1kg:16,tip:{en:'Lower temps stay moist and flaky; higher is firm and well done.',da:'Lavere temperatur giver saftig og flaget laks; højere er fast og gennemstegt.'}},
+ {id:'tuna',label:{en:'Tuna',da:'Tun'},don:[['rare',110],['medrare',125],['medium',140]],defDon:0,pit:450,rest:1,base1kg:9,tip:{en:'Use sushi-grade if serving rare; sear fast and keep the centre cool.',da:'Brug sushikvalitet hvis den serveres rød; brun hurtigt og hold midten kold.'}},
+ {id:'sausage',label:{en:'Sausage',da:'Pølse'},don:[['juicy',160],['well',165]],defDon:0,pit:375,rest:2,base1kg:14,tip:{en:'Ground meat — cook all the way through.',da:'Hakket kød — skal gennemsteges helt.'}},
+ {id:'venison',label:{en:'Venison',da:'Vildt (hjort)'},don:[['rare',125],['medrare',130],['medium',140]],defDon:1,pit:400,rest:5,base1kg:30,tip:{en:'Very lean — do not push past medium.',da:'Meget magert — gå ikke over medium.'}},
+];
+
+/* ===== math ===== */
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+function linreg(xs,ys){const n=xs.length;if(n<2)return null;const mx=mean(xs),my=mean(ys);let sxx=0,sxy=0,syy=0;
+  for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;sxx+=dx*dx;sxy+=dx*dy;syy+=dy*dy;}if(sxx===0)return null;
+  const b=sxy/sxx,a=my-b*mx;let sse=0;for(let i=0;i<n;i++){const e=ys[i]-(a+b*xs[i]);sse+=e*e;}
+  const dof=Math.max(n-2,1);return{a,b,seB:Math.sqrt((sse/dof)/sxx),r2:syy>0?1-sse/syy:0};}
+const recent=(r,m=45)=>r.slice(Math.max(0,r.length-m));
+function ratePerMin(r,w=12){if(r.length<2)return 0;const tN=r[r.length-1].t;const win=r.filter(p=>p.t>=tN-w);const g=linreg(win.map(p=>p.t),win.map(p=>p.temp));return g?g.b:0;}
+function fitWithAmbient(food,amb){const win=recent(food,45);if(win.length<4||amb==null)return null;
+  const Tmax=Math.max(...win.map(p=>p.temp));if(amb<=Tmax+1)return null;
+  const g=linreg(win.map(p=>p.t),win.map(p=>Math.log(amb-p.temp)));if(!g)return null;const k=-g.b;if(k<=0)return null;
+  return{Te:amb,k,g,r2:g.r2,tNow:win[win.length-1].t,Tnow:win[win.length-1].temp,src:'measured'};}
+function fitSearch(food){const win=recent(food,45);if(win.length<4)return null;
+  const tNow=win[win.length-1].t,Tnow=win[win.length-1].temp,Tmax=Math.max(...win.map(p=>p.temp));let best=null;
+  for(let Te=Math.ceil(Tmax)+2;Te<=Tmax+400;Te+=2){const g=linreg(win.map(p=>p.t),win.map(p=>Math.log(Te-p.temp)));if(!g)continue;const k=-g.b;if(k<=0)continue;if(!best||g.r2>best.r2)best={Te,k,g,r2:g.r2,tNow,Tnow,src:'fit'};}return best;}
+function etaFromFit(f,target){if(!f)return null;const{Te,k,tNow,Tnow,g}=f;if(Te<=target)return{unreachable:true,Te};
+  const ratio=(Te-target)/(Te-Tnow);if(ratio<=0||k<=0)return null;const eta=-(1/k)*Math.log(ratio);const seK=g.seB||0;
+  return{eta,etaLo:Math.max(0,-(1/(k+seK))*Math.log(ratio)),etaHi:-(1/Math.max(k-seK,1e-4))*Math.log(ratio),Te,r2:f.r2,tNow,Tnow,k,src:f.src};}
+function detectStall(r,target){const T=r[r.length-1]?.temp??0;const rate=ratePerMin(r,12);return T>=140&&T<=185&&T<target-10&&rate>=0&&rate<0.4;}
+function fmtDur(m){if(m==null||!isFinite(m)||m<0)return"—";const h=Math.floor(m/60),mm=Math.round(m%60);return h>0?`${h}h ${String(mm).padStart(2,"0")}m`:`${mm}m`;}
+const fmtClock=m=>`${Math.floor(m/60)}:${String(Math.floor(m%60)).padStart(2,"0")}`;
+const clockHM=d=>`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+function thermal(t,lo,hi){const x=Math.max(0,Math.min(1,(t-lo)/(hi-lo)));const s=[[0,[76,91,212]],[.5,[224,144,46]],[1,[255,90,54]]];let a=s[0],b=s[s.length-1];for(let i=0;i<s.length-1;i++)if(x>=s[i][0]&&x<=s[i+1][0]){a=s[i];b=s[i+1];break;}const f=(x-a[0])/((b[0]-a[0])||1);return`rgb(${[0,1,2].map(j=>Math.round(a[1][j]+(b[1][j]-a[1][j])*f)).join(",")})`;}
+function axisAround(target,vals,p,minSpan,pad){const dLo=Math.min(target,...vals),dHi=Math.max(target,...vals);
+  const span=Math.max(minSpan,(dHi+pad-target)/Math.max(p,1e-3),(target-(dLo-pad))/Math.max(1-p,1e-3));return[target-(1-p)*span,target+p*span];}
+function xStep(tMax){for(const s of[1,2,5,10,15,30,60,120])if(tMax/s<=6)return s;return 240;}
+
+/* ===== state (sensor A=meat, B=grill; everything stored in °F) ===== */
+const SVC='0000fb00-0000-1000-8000-00805f9b34fb',CHR='0000fb02-0000-1000-8000-00805f9b34fb';
+let state={readings:[],startMs:null,lastA:null,lastB:null,unit:'C',lang:'en',
+  meat:3,don:1,targetF:203,pitF:250,bandF:20,weightKg:0,startState:'fridge',serveAt:'',
+  grillAlarmOn:false,meatActive:false,meatSilenced:false,grillActive:false,grillSilenced:false,grillStatus:'ok',statusKey:'stNot',
+  device:null,char:null,connected:false};
+const $=id=>document.getElementById(id);
+const T=()=>L[state.lang];
+const toD=f=>state.unit==='C'?(f-32)*5/9:f, fromD=v=>state.unit==='C'?v*9/5+32:v, U=()=>state.unit==='C'?'°C':'°F';
+const toDelta=df=>state.unit==='C'?df*5/9:df, fromDelta=dv=>state.unit==='C'?dv*9/5:dv;
+const dispI=f=>f==null?'—':Math.round(toD(f));
+const grillBand=()=>state.bandF;
+const startTempF=()=>state.startState==='fridge'?40:68;
+
+/* ===== cold-start prior (total minutes) ===== */
+function priorTotalMin(){if(state.weightKg<=0)return null;const m=MEATS[state.meat];const sF=startTempF();
+  if(state.pitF<=state.targetF+2||state.pitF<=sF)return null;
+  const refT=m.don[m.defDon][1];const lnAct=Math.log((state.pitF-state.targetF)/(state.pitF-sF));const lnRef=Math.log((m.pit-refT)/(m.pit-40));
+  if(!(lnAct<0)||!(lnRef<0))return null;
+  const total=m.base1kg*Math.pow(state.weightKg,0.67)*(lnAct/lnRef);return total>0&&isFinite(total)?total:null;}
+
+/* ===== audio / alarm / wake lock ===== */
+let ac=null,wl=null;
+function ensureAudio(){try{if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();}catch(e){}}
+function beep(freq,dur){if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=freq;o.connect(g);g.connect(ac.destination);
+  const t=ac.currentTime;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.3,t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,t+(dur||0.22));o.start(t);o.stop(t+(dur||0.22)+0.03);}
+async function reqWake(){try{if('wakeLock'in navigator)wl=await navigator.wakeLock.request('screen');}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.connected)reqWake();});
+document.addEventListener('pointerdown',ensureAudio);
+setInterval(()=>{if(state.meatActive&&!state.meatSilenced){beep(950,0.2);navigator.vibrate&&navigator.vibrate(350);}
+  if(state.grillActive&&!state.grillSilenced){beep(420,0.3);navigator.vibrate&&navigator.vibrate([250,120,250]);}},1100);
+
+/* ===== BLE ===== */
+function setStatus(k){state.statusKey=k;renderStatus();}
+function renderStatus(){const e=$("status");e.textContent=T()[state.statusKey]||'';e.classList.toggle('live',state.statusKey==='stLive');}
+function renderConnectBtn(){const b=$("connectBtn");b.textContent=state.connected?T().disconnect:T().connect;b.classList.toggle('on',state.connected);}
+async function connect(){
+  if(!navigator.bluetooth){return showErr(T().noBT);}
+  try{ensureAudio();showErr("");setStatus('stReq');
+    const dev=await navigator.bluetooth.requestDevice({filters:[{services:[SVC]},{namePrefix:'BBQ'},{namePrefix:'Grill'},{namePrefix:'ProbeE'}],optionalServices:[SVC]});
+    state.device=dev;dev.addEventListener('gattserverdisconnected',onDisc);await openGatt(dev);reqWake();
+  }catch(e){if(e.name!=='NotFoundError')showErr(e.message);setStatus('stNot');}
+}
+async function openGatt(dev){setStatus('stConn');const srv=await dev.gatt.connect();
+  const ch=await(await srv.getPrimaryService(SVC)).getCharacteristic(CHR);state.char=ch;
+  await ch.startNotifications();ch.addEventListener('characteristicvaluechanged',onData);state.connected=true;
+  renderConnectBtn();setStatus('stLive');}
+function onDisc(){state.connected=false;renderConnectBtn();setStatus('stDisc');}
+function disconnect(){if(state.device?.gatt.connected)state.device.gatt.disconnect();onDisc();}
+function onData(ev){const dv=ev.target.value;if(dv.byteLength<7)return;
+  state.lastA=dv.getInt16(2,true)/10;state.lastB=dv.getInt16(4,true)/10;
+  if(state.startMs==null)state.startMs=Date.now();const t=(Date.now()-state.startMs)/60000;
+  const last=state.readings[state.readings.length-1];
+  if(!last||t-last.t>=0.08)state.readings.push({t,a:state.lastA,b:state.lastB});
+  render();}
+
+/* ===== derived ===== */
+const foodSeries=()=>state.readings.map(p=>({t:p.t,temp:p.a}));
+const grillSeries=()=>state.readings.map(p=>({t:p.t,temp:p.b}));
+function grillSmoothed(){const xs=state.readings.slice(-5).map(p=>p.b).filter(v=>v!=null);return xs.length?mean(xs):null;}
+function serveDate(){if(!state.serveAt)return null;const p=state.serveAt.split(':');if(p.length<2)return null;
+  const d=new Date();d.setHours(+p[0],+p[1],0,0);if(d.getTime()<Date.now()-60000)d.setDate(d.getDate()+1);return d;}
+
+/* ===== render ===== */
+function render(){const d=T();
+  const fT=state.lastA,gT=state.lastB;
+  $("vFood").firstChild.nodeValue=fT==null?'—':toD(fT).toFixed(1);
+  $("vGrill").firstChild.nodeValue=gT==null?'—':toD(gT).toFixed(1);
+  $("uFood").textContent=U();$("uGrill").textContent=U();
+  if(fT!=null)$("vFood").style.color=thermal(fT,40,state.targetF+15);
+  if(gT!=null&&state.grillAlarmOn){const b=grillBand();$("vGrill").style.color=(gT<state.pitF-b||gT>state.pitF+b)?'#ff7a4d':'#7Fd17F';}else $("vGrill").style.color='';
+  $("cookClock").textContent=state.readings.length?fmtClock(state.readings[state.readings.length-1].t):"0:00";
+  $("etaLab").textContent="";
+
+  const food=foodSeries(),amb=grillSmoothed();
+  const fit=fitWithAmbient(food,amb)||fitSearch(food);
+  const live=etaFromFit(fit,state.targetF);
+  const elapsed=state.readings.length?state.readings[state.readings.length-1].t:0;
+  const prior=priorTotalMin();
+  const priorEta=(prior!=null)?Math.max(0,prior-elapsed):null;
+  $("stallChip").innerHTML=(food.length>=4&&detectStall(food,state.targetF))?'<span class="chip">stall</span>':'';
+
+  // blend prior + live
+  let etaMin=null,etaLo=null,etaHi=null,src=null;
+  if(live&&!live.unreachable){
+    if(priorEta!=null){const BL=Math.min(60,Math.max(8,prior*0.15));const w=Math.max(0,Math.min(1,1-elapsed/BL));
+      etaMin=w*priorEta+(1-w)*live.eta;etaLo=live.etaLo;etaHi=live.etaHi;src='live';}
+    else{etaMin=live.eta;etaLo=live.etaLo;etaHi=live.etaHi;src='live';}
+  }else if(priorEta!=null){etaMin=priorEta;src='prior';}  // weight-based fallback whenever there's no confident live fit yet
+
+  // alarms
+  state.meatActive=state.connected&&fT!=null&&fT>=state.targetF;if(!state.meatActive)state.meatSilenced=false;
+  state.grillStatus='ok';if(state.grillAlarmOn&&gT!=null){const b=grillBand();if(gT<state.pitF-b)state.grillStatus='low';else if(gT>state.pitF+b)state.grillStatus='high';}
+  state.grillActive=state.grillStatus!=='ok';if(!state.grillActive)state.grillSilenced=false;
+  updateAlarmButtons();
+
+  // ETA card — two heroes: pull (left, primary) and serve (right)
+  const card=$("etaCard");card.classList.remove('ready');$("vEta").style.fontSize="38px";
+  const rs=MEATS[state.meat].rest;const clearRight=()=>{$("hlServe").textContent="";$("vServe").textContent="";};
+  if(state.meatActive){card.classList.add('ready');
+    $("hlPull").textContent=d.pullIn;$("vEta").textContent=d.pullNow;$("vEta").style.fontSize="30px";
+    $("hlServe").textContent=d.serveIn;$("vServe").textContent=fmtDur(rs);$("etaSub").textContent=d.ready;}
+  else if(live&&live.unreachable){$("hlPull").textContent="";$("vEta").style.fontSize="24px";$("vEta").textContent=d.tooCool;clearRight();$("etaSub").textContent=d.wontPass(`${dispI(live.Te)}${U()}`);}
+  else if(etaMin!=null){
+    $("hlPull").textContent=d.pullIn;$("vEta").textContent=fmtDur(etaMin);
+    $("hlServe").textContent=d.serveIn;$("vServe").textContent=fmtDur(etaMin+rs);
+    $("etaSub").textContent=src==='prior'?d.fromWeight:`${fmtDur(etaLo)}–${fmtDur(etaHi)} · ${d.pit} ${live.src==='measured'?'≈':'~'}${dispI(live.Te)}${U()} · R² ${live.r2.toFixed(2)}`;}
+  else if(food.length<4){$("hlPull").textContent="";$("vEta").textContent="—";clearRight();$("etaSub").textContent=d.gathering;}
+  else{$("hlPull").textContent="";$("vEta").textContent="—";clearRight();$("etaSub").textContent=d.waiting;}
+
+  renderRecs(amb,etaMin,prior);drawChart(fit,live);scheduleSave();
+}
+
+function updateAlarmButtons(){const d=T();
+  const m=$("silMeat");m.className="alarmbtn";
+  if(state.meatActive&&!state.meatSilenced){m.classList.add('firing');m.textContent=d.meatReady;}
+  else if(state.meatSilenced){m.classList.add('silenced');m.textContent=d.meatSil;}else m.textContent=d.meatArmed;
+  const g=$("silGrill");g.className="alarmbtn";
+  if(!state.grillAlarmOn)g.textContent=d.grillOff;
+  else if(state.grillActive&&!state.grillSilenced){g.classList.add('firing');g.textContent=state.grillStatus==='low'?d.grillCold:d.grillHot;}
+  else if(state.grillSilenced){g.classList.add('silenced');g.textContent=d.grillSil;}else g.textContent=d.grillOk;
+}
+
+function renderRecs(amb,etaMin,prior){const d=T(),m=MEATS[state.meat];const cooking=state.readings.length>0;
+  let h=`<div class="rectitle">${d.recTitle(m.label[state.lang])}</div>`;
+  h+=`<div class="recline"><span>${d.pullAt}</span><b>${dispI(state.targetF)}${U()}</b></div>`;
+  h+=`<div class="recline"><span>${d.restBefore}</span><b>${d.min(m.rest)}</b></div>`;
+  h+=`<div class="recline"><span>${d.grillSet}</span><b>${dispI(state.pitF)}${U()}${amb!=null?` · ${d.now} ${dispI(amb)}°`:''}</b></div>`;
+  if(cooking){
+    if(etaMin!=null){const rdy=new Date(Date.now()+(etaMin+m.rest)*60000);h+=`<div class="recline plan"><span>${d.readyServe}</span><b>${clockHM(rdy)}</b></div>`;}
+  }else if(prior!=null){
+    h+=`<div class="recline plan"><span>${d.totalCook}</span><b>${fmtDur(prior+m.rest)}</b></div>`;
+    const sd=serveDate();if(sd){const sb=new Date(sd.getTime()-(prior+m.rest)*60000);h+=`<div class="recline plan"><span>${d.startBy}</span><b>${clockHM(sb)}</b></div>`;}
+  }
+  h+=`<div class="rectip">${m.tip[state.lang]}</div>`;$("recs").innerHTML=h;}
+
+/* ===== chart ===== */
+function fitCanvas(){const c=$("chart");const r=c.getBoundingClientRect();if(!r.width)return;const dpr=window.devicePixelRatio||1;
+  c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);c._lw=r.width;c._lh=r.height;}
+function drawChart(fit,eta){const c=$("chart");if(!c._lw)fitCanvas();if(!c._lw)return;
+  const x=c.getContext('2d'),W=c._lw,H=c._lh,Lp=46,Rp=46,top=12,bot=H-26;
+  x.clearRect(0,0,W,H);
+  const food=foodSeries(),grill=grillSeries();
+  const cooking=food.length>0,prior=priorTotalMin(),sF=startTempF();
+  let planK=null;if(prior!=null){const lr=Math.log((state.pitF-state.targetF)/(state.pitF-sF));if(lr<0)planK=-lr/prior;}
+  const tMax=Math.max((food.length?food[food.length-1].t:0)+2,eta&&!eta.unreachable?eta.tNow+Math.min(eta.eta*1.1+2,800):0,(prior!=null)?prior*1.02:0,5);
+  // grill axis: top pulled tight to the grill's upper boundary, auto-expanding if it runs hotter
+  const band=grillBand();
+  const gMax=grill.length?Math.max(...grill.map(p=>p.temp)):state.pitF;
+  const gMin=grill.length?Math.min(...grill.map(p=>p.temp)):70;
+  const gUpper=Math.max(state.pitF+(state.grillAlarmOn?band:8),gMax);
+  const gLower=Math.min(state.pitF-(state.grillAlarmOn?band:8),gMin);
+  let ygH=gUpper+6,ygL=gLower-10;if(ygH-ygL<40){const mid=(ygH+ygL)/2;ygH=mid+20;ygL=mid-20;}
+  const Yg=v=>bot-((v-ygL)/(ygH-ygL))*(bot-top);
+  const fG=(ygH-state.pitF)/(ygH-ygL);                 // grill target fraction from top (near top)
+  const fM=Math.min(0.72,Math.max(0.30,fG+0.20));      // meat target sits just below, but as high as possible
+  const fv=(prior!=null)?(cooking?food.map(p=>p.temp).concat([sF,state.targetF]):[sF,state.targetF]):(food.length?food.map(p=>p.temp):[state.targetF-40]);
+  const[yfL,yfH]=axisAround(state.targetF,fv,fM,30,6);
+  const X=t=>Lp+(t/tMax)*(W-Lp-Rp),Yf=v=>bot-((v-yfL)/(yfH-yfL))*(bot-top);
+  const invF=yy=>yfL+(bot-yy)/(bot-top)*(yfH-yfL),invG=yy=>ygL+(bot-yy)/(bot-top)*(ygH-ygL),r5=v=>Math.round(toD(v)/5)*5;
+  // horizontal gridlines + dual Y scale
+  x.font="10px monospace";x.lineWidth=1;
+  for(let i=0;i<=5;i++){const yy=top+i*((bot-top)/5);
+    x.strokeStyle="#241f1b";x.setLineDash([]);x.beginPath();x.moveTo(Lp,yy);x.lineTo(W-Rp,yy);x.stroke();
+    x.textBaseline="middle";x.fillStyle="#8a7d6f";x.textAlign="right";x.fillText(r5(invF(yy)),Lp-5,yy);
+    x.textAlign="left";x.fillStyle="#5d7fa0";x.fillText(r5(invG(yy)),W-Rp+5,yy);}
+  // vertical gridlines + X time scale
+  const step=xStep(tMax);x.textBaseline="top";x.textAlign="center";x.fillStyle="#8a7d6f";
+  for(let t=0;t<=tMax+1e-6;t+=step){const px=X(t);x.strokeStyle="#241f1b";x.setLineDash([]);x.beginPath();x.moveTo(px,top);x.lineTo(px,bot);x.stroke();x.fillText(fmtClock(t),px,bot+6);}
+  if(state.grillAlarmOn){x.fillStyle="rgba(111,168,220,.10)";x.fillRect(Lp,Yg(state.pitF+band),W-Lp-Rp,Yg(state.pitF-band)-Yg(state.pitF+band));}
+  // target lines (grill higher, meat lower)
+  x.setLineDash([6,4]);x.lineWidth=1.5;x.textBaseline="bottom";x.textAlign="left";
+  x.strokeStyle="rgba(111,168,220,.85)";x.beginPath();x.moveTo(Lp,Yg(state.pitF));x.lineTo(W-Rp,Yg(state.pitF));x.stroke();
+  x.fillStyle="#6FA8DC";x.fillText(`${dispI(state.pitF)}${U()}`,Lp+4,Yg(state.pitF)-3);
+  x.strokeStyle="rgba(224,144,46,.85)";x.beginPath();x.moveTo(Lp,Yf(state.targetF));x.lineTo(W-Rp,Yf(state.targetF));x.stroke();
+  x.fillStyle="#E0902E";x.fillText(`${dispI(state.targetF)}${U()}`,Lp+4,Yf(state.targetF)-3);
+  x.setLineDash([]);x.textAlign="left";x.textBaseline="alphabetic";
+  // weight-based baseline — always shown from t=0 so you can compare prior vs reality
+  if(planK!=null){x.strokeStyle="rgba(255,122,77,.55)";x.lineWidth=2;x.setLineDash([3,4]);x.lineCap="round";x.beginPath();
+    let f=true;for(let t=0;t<=prior;t+=Math.max(.5,prior/90)){const v=state.pitF-(state.pitF-sF)*Math.exp(-planK*t);const px=X(t),py=Yf(v);f?x.moveTo(px,py):x.lineTo(px,py);f=false;}x.stroke();x.setLineDash([]);
+    if(!cooking){x.fillStyle="rgba(255,122,77,.7)";x.beginPath();x.arc(X(0),Yf(sF),3.5,0,7);x.fill();}}
+  // live data-driven projection — forward from the current reading
+  if(fit&&eta&&!eta.unreachable){x.strokeStyle="#FF7A4D";x.lineWidth=2.5;x.setLineDash([7,5]);x.lineCap="round";x.beginPath();
+    const end=eta.tNow+Math.min(eta.eta*1.1+2,800);let f=true;for(let t=eta.tNow;t<=end;t+=Math.max(.5,(end-eta.tNow)/90)){const v=fit.Te-(fit.Te-fit.Tnow)*Math.exp(-fit.k*(t-eta.tNow));const px=X(t),py=Yf(v);f?x.moveTo(px,py):x.lineTo(px,py);f=false;}x.stroke();x.setLineDash([]);}
+  if(grill.length){x.strokeStyle="#6FA8DC";x.lineWidth=2;x.lineJoin="round";x.lineCap="round";x.beginPath();grill.forEach((p,i)=>{const px=X(p.t),py=Yg(p.temp);i?x.lineTo(px,py):x.moveTo(px,py);});x.stroke();}
+  if(food.length){const grd=x.createLinearGradient(0,top,0,bot);grd.addColorStop(0,"rgba(255,90,54,.22)");grd.addColorStop(1,"rgba(76,91,212,.02)");
+    x.beginPath();food.forEach((p,i)=>{const px=X(p.t),py=Yf(p.temp);i?x.lineTo(px,py):x.moveTo(px,py);});x.lineTo(X(food[food.length-1].t),bot);x.lineTo(X(food[0].t),bot);x.closePath();x.fillStyle=grd;x.fill();
+    x.beginPath();food.forEach((p,i)=>{const px=X(p.t),py=Yf(p.temp);i?x.lineTo(px,py):x.moveTo(px,py);});
+    const lg=x.createLinearGradient(0,top,0,bot);lg.addColorStop(0,"#FF5A36");lg.addColorStop(.5,"#E0902E");lg.addColorStop(1,"#4C5BD4");x.strokeStyle=lg;x.lineWidth=3;x.lineJoin="round";x.lineCap="round";x.stroke();
+    const last=food[food.length-1];x.fillStyle="#FF7A4D";x.beginPath();x.arc(X(last.t),Yf(last.temp),3.5,0,7);x.fill();}
+}
+
+/* ===== UI ===== */
+function buildMeats(){const el=$("meats");el.innerHTML="";MEATS.forEach((m,i)=>{const b=document.createElement('button');b.textContent=m.label[state.lang];if(i===state.meat)b.classList.add('on');b.onclick=()=>selectMeat(i);el.appendChild(b);});}
+function buildDoneness(){const m=MEATS[state.meat],row=$("doneness");row.style.display="flex";row.innerHTML="";
+  m.don.forEach((dn,j)=>{const b=document.createElement('button');b.textContent=`${DONL[state.lang][dn[0]]} ${dispI(dn[1])}°`;if(j===state.don)b.classList.add('on');
+    b.onclick=()=>{state.don=j;state.targetF=dn[1];state.meatSilenced=false;buildDoneness();syncNums();render();};row.appendChild(b);});}
+function selectMeat(i){state.meat=i;const m=MEATS[i];state.don=m.defDon;state.targetF=m.don[m.defDon][1];state.pitF=m.pit;snapPit();state.meatSilenced=false;buildMeats();buildDoneness();syncNums();render();}
+function snapPit(){if(state.unit==='C')state.pitF=fromD(Math.round(toD(state.pitF)/5)*5);}
+function snapBand(){const bd=toDelta(state.bandF);state.bandF=fromDelta(Math.max(5,Math.round(bd/5)*5));}
+function wStr(){const w=state.weightKg;return w>0?`${w%1?w.toFixed(1):w} kg`:T().weightOff;}
+function syncNums(){$("tNum").textContent=`${dispI(state.targetF)}${U()}`;$("pNum").textContent=`${dispI(state.pitF)}${U()}`;
+  $("wNum").textContent=wStr();$("bNum").textContent=`±${Math.round(toDelta(state.bandF))}${U()}`;}
+function stepTarget(dir){state.targetF=fromD(Math.round(toD(state.targetF))+dir);state.don=-1;state.meatSilenced=false;buildDoneness();syncNums();render();}
+function stepPit(dir){const cur=Math.round(toD(state.pitF)/5)*5;state.pitF=fromD(cur+5*dir);state.grillSilenced=false;syncNums();render();}
+function stepBand(dir){const cur=Math.round(toDelta(state.bandF)/5)*5;state.bandF=fromDelta(Math.max(5,cur+5*dir));state.grillSilenced=false;syncNums();render();}
+function stepWeight(dir){state.weightKg=Math.max(0,Math.round((state.weightKg+0.5*dir)*10)/10);syncNums();render();}
+function setUnit(u){state.unit=u;document.querySelectorAll('[data-u]').forEach(b=>b.classList.toggle('on',b.dataset.u===u));snapPit();snapBand();buildDoneness();syncNums();render();}
+function setFrom(s){state.startState=s;document.querySelectorAll('[data-from]').forEach(b=>b.classList.toggle('on',b.dataset.from===s));render();}
+function setGrillAlarm(on){state.grillAlarmOn=on;document.querySelectorAll('[data-g]').forEach(b=>b.classList.toggle('on',(b.dataset.g==='on')===on));state.grillSilenced=false;render();}
+function setLang(l){state.lang=l;applyLang();}
+
+function setText(id,t){const e=$(id);if(e)e.textContent=t;}
+function applyLang(){const d=T();
+  setText('kicker',d.kicker);setText('cookLab',d.cookTime);setText('foodLab',d.food);setText('grillLab',d.grill);
+  setText('lblTarget',d.lblTarget);setText('lblPit',d.lblPit);setText('lblWeight',d.lblWeight);setText('lblFrom',d.lblFrom);
+  setText('lblServe',d.lblServe);setText('lblGrillAlarm',d.lblGrillAlarm);setText('lblAlarmRange',d.lblAlarmRange);setText('lblUnit',d.lblUnit);setText('resetBtn',d.reset);setText('exportBtn',d.exportL);setText('importBtn',d.importL);
+  document.querySelector('[data-g="off"]').textContent=d.off;document.querySelector('[data-g="on"]').textContent=d.on;
+  document.querySelector('[data-from="fridge"]').textContent=d.fridge;document.querySelector('[data-from="room"]').textContent=d.room;
+  setText('legFood',d.legFood);setText('legGrill',d.legGrill);setText('legProj',d.legProj);setText('legWeight',d.legWeight);setText('legMT',d.legMT);setText('legGT',d.legGT);setText('foot',d.foot);
+  document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('on',b.dataset.lang===state.lang));
+  document.querySelectorAll('[data-u]').forEach(b=>b.classList.toggle('on',b.dataset.u===state.unit));
+  document.querySelectorAll('[data-g]').forEach(b=>b.classList.toggle('on',(b.dataset.g==='on')===state.grillAlarmOn));
+  document.querySelectorAll('[data-from]').forEach(b=>b.classList.toggle('on',b.dataset.from===state.startState));
+  renderConnectBtn();renderStatus();buildMeats();buildDoneness();syncNums();render();}
+
+$("connectBtn").onclick=()=>state.connected?disconnect():connect();
+$("resetBtn").onclick=()=>{state.readings=[];state.startMs=null;state.meatSilenced=false;state.grillSilenced=false;clearCook();render();};
+$("tUp").onclick=()=>stepTarget(1);$("tDown").onclick=()=>stepTarget(-1);
+$("pUp").onclick=()=>stepPit(1);$("pDown").onclick=()=>stepPit(-1);
+$("wUp").onclick=()=>stepWeight(1);$("wDown").onclick=()=>stepWeight(-1);
+$("bUp").onclick=()=>stepBand(1);$("bDown").onclick=()=>stepBand(-1);
+$("serveAt").onchange=e=>{state.serveAt=e.target.value;render();};
+$("silMeat").onclick=()=>{if(state.meatActive){state.meatSilenced=true;updateAlarmButtons();}};
+$("silGrill").onclick=()=>{if(state.grillActive){state.grillSilenced=true;updateAlarmButtons();}};
+document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>setUnit(b.dataset.u));
+document.querySelectorAll('[data-from]').forEach(b=>b.onclick=()=>setFrom(b.dataset.from));
+document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>setGrillAlarm(b.dataset.g==='on'));
+document.querySelectorAll('[data-lang]').forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
+$("helpBtn").onclick=()=>{$("helpBody").innerHTML=T().help;$("helpModal").classList.add('open');};
+$("helpClose").onclick=()=>$("helpModal").classList.remove('open');
+$("helpModal").onclick=e=>{if(e.target.id==='helpModal')$("helpModal").classList.remove('open');};
+$("exportBtn").onclick=exportCook;
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=e=>{if(e.target.files[0])importCook(e.target.files[0]);e.target.value='';};
+window.addEventListener('resize',()=>{fitCanvas();render();});
+window.addEventListener('load',()=>{fitCanvas();render();});
+function showErr(m){const e=$("err");e.style.display=m?"block":"none";e.textContent=m;}
+
+/* ===== persistence (last cook) + export/import ===== */
+const CK='grilleta_cook_v1';
+const SKEYS=['meat','don','targetF','pitF','bandF','weightKg','startState','serveAt','grillAlarmOn','unit','lang'];
+function cookSnapshot(){const s={};SKEYS.forEach(k=>s[k]=state[k]);
+  return{v:1,app:'grill-eta',savedAt:Date.now(),meatLabel:MEATS[state.meat]&&MEATS[state.meat].label.en,startMs:state.startMs,readings:state.readings,s};}
+function applySnapshot(o){if(!o||o.v!==1||!o.s)return false;
+  SKEYS.forEach(k=>{if(o.s[k]!=null)state[k]=o.s[k];});
+  if(Array.isArray(o.readings))state.readings=o.readings.filter(p=>p&&typeof p.t==='number'&&typeof p.a==='number');
+  if(typeof o.startMs==='number')state.startMs=o.startMs;
+  return true;}
+let saveTmr=null;
+function saveCook(){try{localStorage.setItem(CK,JSON.stringify(cookSnapshot()));}catch(e){}}
+function scheduleSave(){try{clearTimeout(saveTmr);saveTmr=setTimeout(saveCook,700);}catch(e){saveCook();}}
+function loadCook(){try{const r=localStorage.getItem(CK);if(r)applySnapshot(JSON.parse(r));}catch(e){}}
+function clearCook(){try{localStorage.removeItem(CK);}catch(e){}}
+function exportCook(){try{
+  const blob=new Blob([JSON.stringify(cookSnapshot(),null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a'),n=new Date(),p=x=>String(x).padStart(2,'0');
+  a.href=url;a.download=`grill-eta-cook-${n.getFullYear()}${p(n.getMonth()+1)}${p(n.getDate())}-${p(n.getHours())}${p(n.getMinutes())}.json`;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}catch(e){showErr(e.message);}}
+function importCook(file){const rd=new FileReader();
+  rd.onload=()=>{try{if(applySnapshot(JSON.parse(rd.result))){saveCook();showErr("");applyLang();}else showErr(T().badFile);}catch(e){showErr(T().badFile);}};
+  rd.readAsText(file);}
+
+snapPit();snapBand();fitCanvas();loadCook();applyLang();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(){});});}
+</script>
+</body>
+</html>
