@@ -64,6 +64,18 @@ Notes: `querySelectorAll` returns `[]`, so segmented controls (unit, start-temp,
 - Other chars exist (`fb01` config, `fb03` command, `fb04` events, `fb05` status) but aren't needed; FB02 alone gives live data.
 - The `requestDevice` filter matches `{services:[FB00]}` plus name prefixes `BBQ`/`Grill`/`ProbeE`, so same-protocol rebrands with different advertised names still connect.
 
+### Temperature decode (SOLVED)
+
+Both sensors share one encoding: **raw = (T°C + 40) × 10**, i.e. `T°C = (raw − 400) / 10`. The +40 offset keeps values non-negative. Confirmed against the OEM app at two temperatures (raw 750 → 35 °C, raw 2390 → 199 °C: slope exactly 0.1, intercept exactly −40).
+
+The original room-temperature reverse-engineering wrongly read this as `raw/10` °F, which under-reads and diverges as it heats — that was the "grill wrong" bug, and the meat was slightly off too.
+
+Internally the app stores °F, so the decode is `°F = 0.18·raw − 40` applied to **both** sensor A (meat @ offset 2) and sensor B (grill @ offset 4). This lives in `state.calGrill` (default `{m:0.18, b:-40}`) and both `state.lastA`/`state.lastB` use it.
+
+`state.calGrill` is also the user **calibration** (despite the name, it now covers both sensors): `calFit()` defaults to `{m:0.18,b:-40}`, 1 point → offset-only, ≥2 points → least-squares line. Points capture the grill raw (`state.rawB`) + a user-entered true temp; persisted in `localStorage` key `grilleta_cal_v1` (survives Reset). UI: help sheet → "Sensor calibration". Raw frames + points are in the **export** JSON.
+
+To debug the raw stream: **? → Show raw probe data**, or read `rawLog` from an exported cook.
+
 ## Estimation math (summary)
 
 Meat heats per Newton's law toward the pit temperature: `T(t) = T_env − (T_env − T0)·e^(−k·t)`. The fit is a linear regression in log-space; `fitWithAmbient()` uses the measured grill (sensor B) as `T_env` and solves for `k`; `fitSearch()` falls back to a 1-D search over `T_env` when ambient is unreliable. `etaFromFit()` inverts it for time-to-target and derives an uncertainty band from the slope's standard error. `detectStall()` flags the evaporative plateau (~140–185 °F) where rate craters. Cold-start `priorTotalMin()` = `base1kg · weight^0.67 · (lnAct/lnRef)`, adjusted for pit/start temps; it's blended with the live fit, fading out over the first ~15 % of the cook.
