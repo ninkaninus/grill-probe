@@ -173,7 +173,7 @@
 const L={
  en:{kicker:'physics-based · live probe',cookTime:'cook time',connect:'Connect probe',disconnect:'Disconnect',
   stNot:'Not connected',stReq:'Requesting device…',stConn:'Connecting…',stLive:'Live — receiving data',stDisc:'Disconnected — tap to reconnect',
-  noBT:'No Web Bluetooth here. Open in Chrome on Android.',food:'meat',grill:'grill / pit',readyIn:'ready in',pullIn:'pull in',serveIn:'serve in',pullNow:'now',restWord:'rest',
+  noBT:'No Web Bluetooth in this browser. Use Chrome or Edge (PC or Android).',noAdapter:'Bluetooth is off or not available on this device.',food:'meat',grill:'grill / pit',readyIn:'ready in',pullIn:'pull in',serveIn:'serve in',pullNow:'now',restWord:'rest',
   gathering:'gathering data…',waiting:'waiting for a clear trend…',tooCool:'pit too cool',wontPass:t=>`won't reach ≈ ${t} — raise the heat`,
   ready:'Ready — pull it',rest:n=>`rest ${n} min before serving`,pit:'pit',fromWeight:'estimate from weight — refines live',
   meatArmed:'Meat alarm armed',meatReady:'Meat ready — tap to silence',meatSil:'Meat silenced',
@@ -193,7 +193,7 @@ const L={
 <h4>Before you connect</h4>
 <p>Pick the meat, doneness, weight and starting temp to get a planning estimate. Add a <b>serve at</b> time and you'll get a <b>start cooking by</b> time.</p>
 <h4>Connect the probe</h4>
-<p>Tap <b>Connect probe</b> and choose your probe (Chrome on Android). Insert the tip into the thickest part of the meat; the base sensor reads the grill/pit air.</p>
+<p>Tap <b>Connect probe</b> and choose your probe (Chrome or Edge — PC or Android). Insert the tip into the thickest part of the meat; the base sensor reads the grill/pit air.</p>
 <h4>The graph</h4>
 <p><span class="sw" style="background:#FF7A4D"></span><b>Meat</b> — actual probe temperature (solid).</p>
 <p><span class="sw" style="background:#FF7A4D;opacity:.55"></span><b>Live est.</b> — projection from real data (bright dashed).</p>
@@ -206,11 +206,11 @@ const L={
 <h4>Saving &amp; export</h4>
 <p>Your current cook (settings + readings) is saved automatically on this device, so closing the page won't lose progress. <b>Reset cook</b> clears it. <b>Export cook</b> downloads a JSON log for debugging or tuning; <b>Import cook</b> reloads one.</p>
 <h4>Compatible probes</h4>
-<p>Works with wireless probes that use the “Grill ProbeE” app (FMG / Shenzhen Flamingo and its rebrands). On iPhone the planner works, but the live probe connection needs Chrome on Android.</p>`,
+<p>Works with wireless probes that use the “Grill ProbeE” app (FMG / Shenzhen Flamingo and its rebrands). The live connection works in Chrome and Edge on Windows, macOS and Android. On Linux, enable <b>chrome://flags/#enable-web-bluetooth</b> first. iPhone has no Web Bluetooth — the planner still works.</p>`,
   foot:'Insert the tip into the thickest part; the base sensor reads grill/pit air. Keep the app open so alarms keep sounding.'},
  da:{kicker:'fysikbaseret · live probe',cookTime:'tilberedningstid',connect:'Forbind probe',disconnect:'Afbryd',
   stNot:'Ikke forbundet',stReq:'Søger enhed…',stConn:'Forbinder…',stLive:'Live — modtager data',stDisc:'Afbrudt — tryk for at forbinde igen',
-  noBT:'Ingen Web Bluetooth her. Åbn i Chrome på Android.',food:'kød',grill:'grill',readyIn:'klar om',pullIn:'tag af om',serveIn:'servering om',pullNow:'nu',restWord:'hvile',
+  noBT:'Ingen Web Bluetooth i denne browser. Brug Chrome eller Edge (pc eller Android).',noAdapter:'Bluetooth er slået fra eller ikke tilgængelig på denne enhed.',food:'kød',grill:'grill',readyIn:'klar om',pullIn:'tag af om',serveIn:'servering om',pullNow:'nu',restWord:'hvile',
   gathering:'indsamler data…',waiting:'venter på en tydelig tendens…',tooCool:'grill for kold',wontPass:t=>`når ikke ≈ ${t} — skru op`,
   ready:'Klar — tag den af',rest:n=>`hvil ${n} min før servering`,pit:'grill',fromWeight:'estimat ud fra vægt — finpudses live',
   meatArmed:'Kødalarm klar',meatReady:'Kød klar — tryk for at slå fra',meatSil:'Kød slået fra',
@@ -230,7 +230,7 @@ const L={
 <h4>Før du forbinder</h4>
 <p>Vælg kød, stegegrad, vægt og starttemperatur for at få et planlægnings-estimat. Tilføj et <b>servér kl.</b>-tidspunkt, og du får et <b>start senest</b>-tidspunkt.</p>
 <h4>Forbind proben</h4>
-<p>Tryk <b>Forbind probe</b> og vælg din probe (Chrome på Android). Stik spidsen i den tykkeste del af kødet; bundsensoren måler grill-/ovnluften.</p>
+<p>Tryk <b>Forbind probe</b> og vælg din probe (Chrome eller Edge — pc eller Android). Stik spidsen i den tykkeste del af kødet; bundsensoren måler grill-/ovnluften.</p>
 <h4>Grafen</h4>
 <p><span class="sw" style="background:#FF7A4D"></span><b>Kød</b> — faktisk probetemperatur (fuld linje).</p>
 <p><span class="sw" style="background:#FF7A4D;opacity:.55"></span><b>Live-est.</b> — fremskrivning ud fra rigtige data (kraftig stiplet).</p>
@@ -243,7 +243,7 @@ const L={
 <h4>Gem og eksport</h4>
 <p>Din nuværende tilberedning (indstillinger + målinger) gemmes automatisk på denne enhed, så du mister ikke fremskridt ved at lukke siden. <b>Nulstil</b> rydder den. <b>Eksportér</b> henter en JSON-log til fejlsøgning eller justering; <b>Importér</b> indlæser en igen.</p>
 <h4>Kompatible prober</h4>
-<p>Virker med trådløse prober der bruger “Grill ProbeE”-appen (FMG / Shenzhen Flamingo og deres rebrands). På iPhone virker planlæggeren, men live-forbindelsen kræver Chrome på Android.</p>`,
+<p>Virker med trådløse prober der bruger “Grill ProbeE”-appen (FMG / Shenzhen Flamingo og deres rebrands). Live-forbindelsen virker i Chrome og Edge på Windows, macOS og Android. På Linux skal du først slå <b>chrome://flags/#enable-web-bluetooth</b> til. iPhone har ingen Web Bluetooth — planlæggeren virker stadig.</p>`,
   foot:'Sæt spidsen ind i den tykkeste del; bundsensoren måler grill-/ovnluften. Hold appen åben så alarmerne bliver ved med at lyde.'}
 };
 const DONL={en:{rare:'Rare',medrare:'Med-rare',medium:'Medium',medwell:'Med-well',well:'Well',sliceable:'Sliceable',probetender:'Probe-tender',fallapart:'Fall-apart',tender:'Tender',bitethrough:'Bite-through',falloff:'Fall-off',safe:'Safe',verytender:'Very tender',juicy:'Juicy'},
@@ -357,6 +357,7 @@ function renderStatus(){const e=$("status");e.textContent=T()[state.statusKey]||
 function renderConnectBtn(){const b=$("connectBtn");b.textContent=state.connected?T().disconnect:T().connect;b.classList.toggle('on',state.connected);}
 async function connect(){
   if(!navigator.bluetooth){return showErr(T().noBT);}
+  try{if(navigator.bluetooth.getAvailability&&!(await navigator.bluetooth.getAvailability()))return showErr(T().noAdapter);}catch(e){}
   try{ensureAudio();showErr("");setStatus('stReq');
     const dev=await navigator.bluetooth.requestDevice({filters:[{services:[SVC]},{namePrefix:'BBQ'},{namePrefix:'Grill'},{namePrefix:'ProbeE'}],optionalServices:[SVC]});
     state.device=dev;dev.addEventListener('gattserverdisconnected',onDisc);await openGatt(dev);reqWake();
