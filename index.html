@@ -79,6 +79,9 @@
   .lg-we{background:repeating-linear-gradient(90deg,rgba(255,122,77,.6) 0 3px,transparent 3px 7px)}
 
   .ctrls{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .search{width:100%;padding:9px 12px;margin-bottom:10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;color:var(--hi);font-family:var(--disp);font-size:14px;outline:none}
+  .search::placeholder{color:var(--dim)}
+  .search:focus{border-color:var(--amber)}
   .scroller{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;-ms-overflow-style:none;scrollbar-width:none}
   .scroller::-webkit-scrollbar{display:none}
   .scroller button{flex:0 0 auto;padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:13px;white-space:nowrap}
@@ -136,6 +139,7 @@
   </div>
 
   <div class="ctrls">
+    <input type="search" id="meatSearch" class="search" autocomplete="off" />
     <div class="scroller" id="meats"></div>
     <div class="scroller donrow" id="doneness"></div>
     <div class="field"><span class="l" id="lblTarget"></span>
@@ -177,7 +181,7 @@ const L={
   recTitle:m=>`${m} · recommendations`,pullAt:'Pull off at',restBefore:'Rest before serving',min:n=>`${n} min`,grillSet:'Grill / oven set to',now:'now',
   startBy:'Start cooking by',readyServe:'Ready to serve ≈',totalCook:'Estimated total time',
   lblTarget:'target meat temp',lblPit:'grill / oven temp',lblWeight:'meat weight',lblFrom:'starting temp',fridge:'Fridge',room:'Room',
-  lblServe:'serve at',lblGrillAlarm:'grill alarm',lblAlarmRange:'alarm range ±',lblUnit:'unit',off:'Off',on:'On',reset:'Reset cook',weightOff:'not set',exportL:'Export cook',importL:'Import cook',badFile:'Could not read that cook file',dbgLabel:'Show raw probe data (debug)',
+  lblServe:'serve at',lblGrillAlarm:'grill alarm',lblAlarmRange:'alarm range ±',lblUnit:'unit',off:'Off',on:'On',reset:'Reset cook',weightOff:'not set',searchPh:'Search meats…',searchNone:'no match',exportL:'Export cook',importL:'Import cook',badFile:'Could not read that cook file',dbgLabel:'Show raw probe data (debug)',
   calTtl:'Sensor calibration',calAdd:'Add',calClr:'Clear',calNow:'grill now:',calPts:'pts',calDef:'default',calOffset:'offset only — add a 2nd point',calCorr:'corrected',
   calHint:'Pre-calibrated for the Grill ProbeE family (both sensors). If readings are still off on your unit: while connected, type the real grill temp (oven or OEM app) and tap Add, then add a 2nd point at a clearly different temperature. Applies to meat and grill. Clear reverts to default.',
   legFood:'meat',legGrill:'grill',legProj:'live est.',legWeight:'weight est.',legMT:'meat target',legGT:'grill target',
@@ -214,7 +218,7 @@ const L={
   recTitle:m=>`${m} · anbefalinger`,pullAt:'Tag kødet af ved',restBefore:'Hvil før servering',min:n=>`${n} min`,grillSet:'Grill / ovn indstilles til',now:'nu',
   startBy:'Start tilberedning senest',readyServe:'Klar til servering ≈',totalCook:'Anslået samlet tid',
   lblTarget:'ønsket kødtemperatur',lblPit:'grill- / ovntemperatur',lblWeight:'kødvægt',lblFrom:'starttemperatur',fridge:'Køleskab',room:'Stuetemp.',
-  lblServe:'servér kl.',lblGrillAlarm:'grillalarm',lblAlarmRange:'alarminterval ±',lblUnit:'enhed',off:'Fra',on:'Til',reset:'Nulstil',weightOff:'ikke sat',exportL:'Eksportér',importL:'Importér',badFile:'Kunne ikke læse den fil',dbgLabel:'Vis rå probe-data (debug)',
+  lblServe:'servér kl.',lblGrillAlarm:'grillalarm',lblAlarmRange:'alarminterval ±',lblUnit:'enhed',off:'Fra',on:'Til',reset:'Nulstil',weightOff:'ikke sat',searchPh:'Søg efter kød…',searchNone:'intet match',exportL:'Eksportér',importL:'Importér',badFile:'Kunne ikke læse den fil',dbgLabel:'Vis rå probe-data (debug)',
   calTtl:'Sensor-kalibrering',calAdd:'Tilføj',calClr:'Ryd',calNow:'grill nu:',calPts:'pkt',calDef:'standard',calOffset:'kun forskydning — tilføj et 2. punkt',calCorr:'korrigeret',
   calHint:'Forkalibreret til Grill ProbeE-familien (begge sensorer). Hvis aflæsningen stadig er forkert på din enhed: mens du er forbundet, indtast den rigtige grilltemp (ovn eller OEM-app) og tryk Tilføj, og tilføj et 2. punkt ved en tydeligt anden temperatur. Gælder for kød og grill. Ryd nulstiller til standard.',
   legFood:'kød',legGrill:'grill',legProj:'live est.',legWeight:'vægt-est.',legMT:'kødmål',legGT:'grillmål',
@@ -266,6 +270,26 @@ const MEATS=[
  {id:'tuna',label:{en:'Tuna',da:'Tun'},don:[['rare',110],['medrare',125],['medium',140]],defDon:0,pit:450,rest:1,base1kg:9,tip:{en:'Use sushi-grade if serving rare; sear fast and keep the centre cool.',da:'Brug sushikvalitet hvis den serveres rød; brun hurtigt og hold midten kold.'}},
  {id:'sausage',label:{en:'Sausage',da:'Pølse'},don:[['juicy',160],['well',165]],defDon:0,pit:375,rest:2,base1kg:14,tip:{en:'Ground meat — cook all the way through.',da:'Hakket kød — skal gennemsteges helt.'}},
  {id:'venison',label:{en:'Venison',da:'Vildt (hjort)'},don:[['rare',125],['medrare',130],['medium',140]],defDon:1,pit:400,rest:5,base1kg:30,tip:{en:'Very lean — do not push past medium.',da:'Meget magert — gå ikke over medium.'}},
+ {id:'porkneck',label:{en:'Pork neck roast',da:'Nakkesteg'},don:[['medium',150],['well',160],['tender',180]],defDon:0,pit:325,rest:15,base1kg:65,tip:{en:'Marbled and forgiving — roast on indirect heat and rest well.',da:'Fedtmarmoreret og tilgivende — steg ved indirekte varme og lad hvile godt.'}},
+ {id:'porktender',label:{en:'Pork tenderloin',da:'Svinemørbrad'},don:[['medium',145],['medwell',150],['well',160]],defDon:0,pit:400,rest:5,base1kg:30,tip:{en:'Very lean — sear, then pull right on temp so it stays juicy.',da:'Meget mager — brun den af, og tag den af præcis ved temperaturen så den forbliver saftig.'}},
+ {id:'porkneckchop',label:{en:'Pork neck chops',da:'Nakkekoteletter'},don:[['medium',150],['well',160]],defDon:0,pit:425,rest:3,base1kg:45,tip:{en:'Fattier than loin chops — handles direct heat well.',da:'Federe end almindelige koteletter — tåler direkte varme godt.'}},
+ {id:'flaeskesteg',label:{en:'Pork roast w/ crackling',da:'Flæskesteg'},don:[['medium',150],['well',160]],defDon:0,pit:400,rest:15,base1kg:55,tip:{en:'Dry the rind, salt it well, and keep steady high heat for crisp crackling.',da:'Dup sværen tør, salt den godt, og hold jævn høj varme for sprød svær.'}},
+ {id:'culotte',label:{en:'Culotte (rump cap)',da:'Culotte'},don:[['rare',125],['medrare',130],['medium',140],['medwell',150]],defDon:1,pit:375,rest:12,base1kg:35,tip:{en:'Score the fat cap, roast indirect, then sear fat-side down. Slice across the grain.',da:'Rids fedtkanten, steg indirekte, og brun til sidst med fedtsiden nedad. Skær på tværs af fibrene.'}},
+ {id:'beeftender',label:{en:'Beef tenderloin',da:'Oksemørbrad'},don:[['rare',125],['medrare',130],['medium',140]],defDon:1,pit:375,rest:10,base1kg:25,tip:{en:'Very lean and tender — tuck the thin tail under for even thickness.',da:'Meget mager og mør — buk den tynde ende ind under, så tykkelsen bliver ens.'}},
+ {id:'flank',label:{en:'Flank steak',da:'Flanksteak'},don:[['rare',125],['medrare',130],['medium',140]],defDon:1,pit:450,rest:5,base1kg:14,tip:{en:'High heat, short cook — always slice thinly across the grain.',da:'Høj varme, kort tid — skær altid i tynde skiver på tværs af fibrene.'}},
+ {id:'turkeybreast',label:{en:'Turkey breast',da:'Kalkunbryst'},don:[['safe',165],['tender',170]],defDon:0,pit:350,rest:10,base1kg:45,tip:{en:'Lean — brine or baste, and pull right on temp.',da:'Magert — læg i lage eller pensl undervejs, og tag det af præcis ved temperaturen.'}},
+ {id:'porkbelly',label:{en:'Pork belly',da:'Svinebryst (belly)'},don:[['tender',195],['fallapart',203]],defDon:0,pit:275,rest:15,base1kg:90,tip:{en:'Low and slow until tender, then crisp the skin over direct heat.',da:'Lavt og længe til det er mørt, og gør så sværen sprød over direkte varme til sidst.'}},
+ {id:'wholefish',label:{en:'Whole fish (trout)',da:'Hel fisk (ørred)'},don:[['medium',135],['well',145]],defDon:0,pit:400,rest:3,base1kg:20,tip:{en:'Probe the thickest part behind the head; the skin keeps it moist.',da:'Stik proben i det tykkeste sted bag hovedet; skindet holder fisken saftig.'}},
+ {id:'meatloaf',label:{en:'Meatloaf',da:'Farsbrød / forloren hare'},don:[['safe',160],['well',165]],defDon:0,pit:350,rest:10,base1kg:55,tip:{en:'Ground meat — must be cooked all the way through.',da:'Hakket kød — skal gennemsteges helt.'}},
+ {id:'tomahawk',label:{en:'Tomahawk / thick steak',da:'Tomahawk / tyk bøf'},don:[['rare',125],['medrare',132],['medium',140],['medwell',150]],defDon:1,pit:275,rest:8,base1kg:40,tip:{en:'Reverse sear: roast low to just under target, then sear hard.',da:'Reverse sear: steg ved lav varme til lige under målet, og brun så hårdt af.'}},
+ {id:'shortribs',label:{en:'Beef short ribs',da:'Short ribs (okse)'},don:[['sliceable',195],['probetender',203],['fallapart',207]],defDon:1,pit:275,rest:30,base1kg:150,tip:{en:'Like brisket on a stick — cook until the probe slides in with no resistance.',da:'Som brisket på ben — tilbered til proben glider i uden modstand.'}},
+ {id:'cuvette',label:{en:'Rump roast (cuvette)',da:'Cuvette'},don:[['medrare',130],['medium',140],['medwell',150]],defDon:0,pit:350,rest:12,base1kg:45,tip:{en:'Leaner than culotte — indirect heat, and slice thinly across the grain.',da:'Magrere end culotte — indirekte varme, og skær i tynde skiver på tværs af fibrene.'}},
+ {id:'vealroast',label:{en:'Veal roast',da:'Kalvesteg'},don:[['medrare',135],['medium',145],['well',155]],defDon:1,pit:325,rest:15,base1kg:70,tip:{en:'Delicate and lean — keep it pink and rest well.',da:'Fint og magert kød — hold det rosa og lad det hvile godt.'}},
+ {id:'hamroast',label:{en:'Fresh ham roast',da:'Skinkesteg'},don:[['medium',150],['well',160]],defDon:0,pit:325,rest:15,base1kg:60,tip:{en:'Lean roast — pull on time and rest before carving.',da:'Mager steg — tag den af i tide og lad hvile før udskæring.'}},
+ {id:'duckwhole',label:{en:'Duck (whole)',da:'And (hel)'},don:[['safe',165],['tender',180]],defDon:0,pit:350,rest:15,base1kg:55,tip:{en:'Prick the skin so the fat renders; legs like it hotter than breast.',da:'Prik hul i skindet så fedtet smelter fra; lårene skal have mere end brystet.'}},
+ {id:'lambrack',label:{en:'Rack of lamb',da:'Lammekrone'},don:[['medrare',130],['medium',140],['well',155]],defDon:0,pit:400,rest:8,base1kg:25,tip:{en:'Sear the fat side first, finish indirect — pink is classic.',da:'Brun fedtsiden først, og gør færdig indirekte — rosa er klassisk.'}},
+ {id:'lambshoulder',label:{en:'Lamb shoulder',da:'Lammebov'},don:[['tender',195],['fallapart',203]],defDon:0,pit:275,rest:20,base1kg:120,tip:{en:'Slow cook until it pulls apart, like pulled pork.',da:'Langtidssteg til det kan trevles, som pulled pork.'}},
+ {id:'cod',label:{en:'Cod / white fish',da:'Torsk / hvid fisk'},don:[['medium',130],['well',140]],defDon:0,pit:375,rest:2,base1kg:15,tip:{en:'Done when it flakes — pull right on temp, it overcooks fast.',da:'Færdig når den flager — tag den af præcis ved temperaturen, den bliver hurtigt tør.'}},
 ];
 
 /* ===== math ===== */
@@ -492,7 +516,11 @@ function drawChart(fit,eta){const c=$("chart");if(!c._lw)fitCanvas();if(!c._lw)r
 }
 
 /* ===== UI ===== */
-function buildMeats(){const el=$("meats");el.innerHTML="";MEATS.forEach((m,i)=>{const b=document.createElement('button');b.textContent=m.label[state.lang];if(i===state.meat)b.classList.add('on');b.onclick=()=>selectMeat(i);el.appendChild(b);});}
+let meatQuery='';
+function buildMeats(){const el=$("meats");el.innerHTML="";const q=meatQuery.trim().toLowerCase();let shown=0;
+  MEATS.forEach((m,i)=>{if(q&&!m.label.en.toLowerCase().includes(q)&&!m.label.da.toLowerCase().includes(q))return;
+    const b=document.createElement('button');b.textContent=m.label[state.lang];if(i===state.meat)b.classList.add('on');b.onclick=()=>selectMeat(i);el.appendChild(b);shown++;});
+  if(!shown){const s=document.createElement('button');s.textContent=T().searchNone;s.disabled=true;el.appendChild(s);}}
 function buildDoneness(){const m=MEATS[state.meat],row=$("doneness");row.style.display="flex";row.innerHTML="";
   m.don.forEach((dn,j)=>{const b=document.createElement('button');b.textContent=`${DONL[state.lang][dn[0]]} ${dispI(dn[1])}°`;if(j===state.don)b.classList.add('on');
     b.onclick=()=>{state.don=j;state.targetF=dn[1];state.meatSilenced=false;buildDoneness();syncNums();render();};row.appendChild(b);});}
@@ -517,6 +545,7 @@ function applyLang(){const d=T();
   setText('lblTarget',d.lblTarget);setText('lblPit',d.lblPit);setText('lblWeight',d.lblWeight);setText('lblFrom',d.lblFrom);
   setText('lblServe',d.lblServe);setText('lblGrillAlarm',d.lblGrillAlarm);setText('lblAlarmRange',d.lblAlarmRange);setText('lblUnit',d.lblUnit);setText('resetBtn',d.reset);setText('exportBtn',d.exportL);setText('importBtn',d.importL);setText('dbgLabel',d.dbgLabel);
   setText('calTtl',d.calTtl);setText('calAdd',d.calAdd);setText('calClr',d.calClr);setText('calHint',d.calHint);updateCalUI();
+  const ms=$("meatSearch");if(ms)ms.placeholder=d.searchPh;
   document.querySelector('[data-g="off"]').textContent=d.off;document.querySelector('[data-g="on"]').textContent=d.on;
   document.querySelector('[data-from="fridge"]').textContent=d.fridge;document.querySelector('[data-from="room"]').textContent=d.room;
   setText('legFood',d.legFood);setText('legGrill',d.legGrill);setText('legProj',d.legProj);setText('legWeight',d.legWeight);setText('legMT',d.legMT);setText('legGT',d.legGT);setText('foot',d.foot);
@@ -533,6 +562,7 @@ $("pUp").onclick=()=>stepPit(1);$("pDown").onclick=()=>stepPit(-1);
 $("wUp").onclick=()=>stepWeight(1);$("wDown").onclick=()=>stepWeight(-1);
 $("bUp").onclick=()=>stepBand(1);$("bDown").onclick=()=>stepBand(-1);
 $("serveAt").onchange=e=>{state.serveAt=e.target.value;render();};
+$("meatSearch").oninput=e=>{meatQuery=e.target.value;buildMeats();};
 $("silMeat").onclick=()=>{if(state.meatActive){state.meatSilenced=true;updateAlarmButtons();}};
 $("silGrill").onclick=()=>{if(state.grillActive){state.grillSilenced=true;updateAlarmButtons();}};
 document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>setUnit(b.dataset.u));

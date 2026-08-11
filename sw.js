@@ -1,6 +1,6 @@
 // Grill ETA service worker
 // Bump CACHE when you change cached assets to force an update.
-const CACHE = 'grill-eta-v1';
+const CACHE = 'grill-eta-v2';
 const ASSETS = [
   './',
   './index.html',
