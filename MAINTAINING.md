@@ -86,7 +86,7 @@ Meat heats per Newton's law toward the pit temperature: `T(t) = T_env − (T_env
 - **Tune times:** adjust that cut's `base1kg` (minutes for 1 kg). Compare the faint dotted "weight est." line to the actual line in real cooks — if cooks run slow, raise `base1kg`; if fast, lower it.
 - **Add a control with text:** add `L.en`/`L.da` keys, render the element, and set its text in `applyLang()`.
 - **Change line styles/colors:** chart colors are inline in `drawChart()`; legend swatches are the `.lg-*` CSS classes; theme tokens are the `:root` CSS variables (`--ember`, `--amber`, `--steel`, …).
-- **Regenerate icons:** re-run the Pillow script that produced `icon-*.png` (ember flame on dark rounded background; renders at 3× then downsamples; maskable variant insets art into the safe zone). Keep filenames identical so the manifest still matches.
+- **Regenerate icons:** run `python3 tools/make-icons.py` from the repo root (needs Pillow). It is the single source for the logo — a flame with a grill fork holding a browning sausage — and writes `icon-*.png`, `favicon.ico`, `favicon.svg`, `logo.svg` and `og-image.png`. Geometry lives in the constants at the top; art is rasterised at 4× and downsampled, the maskable variant is full-bleed with the art inside the 80 % safe circle, and the 16/32 px favicon entries drop to the flame silhouette alone because the fork and sausage smear at that size. **The app header inlines the same SVG**, so after changing the geometry copy the body of the regenerated `logo.svg` into the `class="logo"` svg in `index.html`. Keep filenames identical so the manifest and `sw.js` still match.
 
 ## Persistence & export/import
 
@@ -104,7 +104,8 @@ The current cook is auto-saved to `localStorage` under key **`grilleta_cook_v1`*
 
 - It's a GitHub Pages static site (see `README.md`). Push files to repo root; relative paths handle the subpath.
 - The service worker (`sw.js`) is **network-first for navigations** (newest version loads when online) and **cache-first for assets** (offline once loaded; cross-origin fonts are runtime-cached as opaque responses).
-- **When you change cached assets, bump `const CACHE = 'grill-eta-v1'`** in `sw.js` (→ `v2`, …) so the old precache is purged on activate. The page itself updates regardless, but bump for clean asset refresh.
+- **When you change cached assets, bump `const CACHE`** in `sw.js` (`grill-eta-v3` at time of writing → `v4`, …) so the old precache is purged on activate. The page itself updates regardless, but bump for clean asset refresh.
+- GitHub's Pages build occasionally sits in `queued` and then cancels itself. If a push doesn't go live, `gh api -X POST repos/<owner>/<repo>/pages/builds` re-triggers it.
 
 ## Gotchas
 

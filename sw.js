@@ -1,6 +1,6 @@
 // Grill ETA service worker
 // Bump CACHE when you change cached assets to force an update.
-const CACHE = 'grill-eta-v2';
+const CACHE = 'grill-eta-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,9 @@ const ASSETS = [
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
-  './icon-180.png'
+  './icon-180.png',
+  './favicon.ico',
+  './favicon.svg'
 ];
 
 self.addEventListener('install', (e) => {

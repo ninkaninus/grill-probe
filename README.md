@@ -1,3 +1,5 @@
+<img src="icon-192.png" alt="" width="84" align="left" hspace="14" />
+
 # Grill ETA
 
 A physics-based cook-time estimator for cheap wireless BBQ probes, in a single web page. It reads your probe's meat + grill temperature over Bluetooth and predicts when the meat will hit your target — using Newton's law of heating and stall detection instead of the naive linear guess most cheap apps use. Works as an installable PWA (offline-capable) and runs entirely on-device; no account, no server, no data leaves your phone.
@@ -13,6 +15,9 @@ A physics-based cook-time estimator for cheap wireless BBQ probes, in a single w
    icon-512.png
    icon-maskable-512.png
    icon-180.png
+   favicon.ico
+   favicon.svg
+   og-image.png
    ```
 2. Repo **Settings → Pages → Build and deployment → Source: Deploy from a branch**, branch `main`, folder `/ (root)`, **Save**.
 3. Wait ~1 minute. It goes live at `https://<your-user>.github.io/grill-eta/`.
@@ -40,7 +45,7 @@ Known-compatible = any probe whose seller tells you to use the **Grill ProbeE** 
 
 ## Caveats
 
-- **Android only for the live probe.** Web Bluetooth doesn't exist in iOS Safari. On iPhone the planner and graph load, but **Connect probe** won't work.
+- **No live probe on iPhone.** Web Bluetooth doesn't exist in iOS Safari, so the planner and graph load but **Connect probe** won't work. It does work in Chrome/Edge on Android, Windows and macOS; on Linux enable `chrome://flags/#enable-web-bluetooth` first.
 - Each person needs their own probe in Bluetooth range; this is not a shared live feed.
 - The estimate is a model. It refines itself from live data; absolute times for quick/thin cuts are rough until a few readings come in.
 
@@ -52,6 +57,10 @@ Known-compatible = any probe whose seller tells you to use the **Grill ProbeE** 
 | `manifest.webmanifest` | PWA manifest (name, icons, standalone display). |
 | `sw.js` | Service worker: offline cache + always-latest-when-online. |
 | `icon-*.png` | App icons (192/512 standard, 512 maskable, 180 Apple). |
+| `favicon.ico` / `favicon.svg` | Browser tab icons. |
+| `og-image.png` | Link-preview image for social/chat unfurls. |
+| `logo.svg` | The bare mark, also inlined in the app header. |
+| `tools/make-icons.py` | Regenerates every icon above from one vector definition. |
 | `MAINTAINING.md` | Architecture + how-to-extend guide. |
 
 See `MAINTAINING.md` to make changes.
